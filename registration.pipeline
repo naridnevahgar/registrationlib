@@ -1,0 +1,57 @@
+pipeline {
+   agent any
+
+    parameters{
+       string(defaultValue: '', description: 'The name of the project', name: 'PROJECT_NAME')
+       string(defaultValue: '', description: 'The GIT repo of the project', name: 'PROJECT_REPO')
+   }
+
+   stages {
+      stage('Display params') {
+          steps {
+              echo "building for ${params.PROJECT_NAME} from ${params.PROJECT_REPO}"
+          }
+      }
+
+      stage('Access shared lib') {
+          steps {
+              script {
+                String gitRepo = "${params.PROJECT_REPO}"
+                String gitRepoName = "${params.PROJECT_NAME}"
+                String artifactoryBuildFolderName = "buildartifact"
+                String jobName = "${params.PROJECT_NAME}" + "-build"
+                String jobScript = "pipeline{steps{step{ echo 'hello world' }}}"
+
+                echo "${params.PROJECT_NAME} is in shared lib phase now"
+
+                Jenkins jenkins = Jenkins.instance // saves some typing
+
+                // Get the folder where this job should be
+                def buildArtifactFolder = jenkins.getItem(artifactoryBuildFolderName)
+
+                // Create the git configuration
+                UserRemoteConfig userRemoteConfig = new UserRemoteConfig(gitRepo, gitRepoName, null, null)
+
+                branches = null
+                doGenerateSubmoduleConfigurations = false
+                submoduleCfg = null
+                browser = null
+                gitTool = null
+                extensions = []
+                GitSCM scm = new GitSCM([userRemoteConfig], branches, doGenerateSubmoduleConfigurations, submoduleCfg, browser, gitTool, extensions)
+
+                // Create the workflow
+                FlowDefinition flowDefinition = (FlowDefinition) new CpsScmFlowDefinition(scm, jobScript)
+
+                // Create artifact build job
+                job = buildArtifactFolder.createProject(WorkflowJob, jobName)
+
+                // Add the workflow to the job
+                job.setDefinition(flowDefinition)
+
+                job.save()
+              }
+          }
+      }
+   }
+}

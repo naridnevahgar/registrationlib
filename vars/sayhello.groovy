@@ -1,3 +1,3 @@
-def hello(String projectName, String projectRepo) {
+def call(String projectName, String projectRepo) {
   echo "I received " + projectName + ", " + projectRepo
 }
