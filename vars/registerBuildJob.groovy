@@ -1,17 +1,10 @@
 def call(String jobName, String projectRepo) {
   freeStyleJob(jobName) {
     scm {
-      git {
-        branch('master')
-        remote {
-          url(projectRepo)
-        }
-      }
+      git(projectRepo, 'master')
     }
     steps {
-      maven {
-        goals('clean verify')
-      }
+      maven('clean verify')
     }
   }
 }
