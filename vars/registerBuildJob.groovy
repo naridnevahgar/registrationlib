@@ -1,5 +1,5 @@
 def call(String jobName, String projectRepo) {
-  job(jobName) {
+  freeStyleJob(jobName) {
     scm {
       git {
         branch('master')
